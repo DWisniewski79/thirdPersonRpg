@@ -19,7 +19,7 @@ AMyCharacter::AMyCharacter()
 
 	//Creating a third person perspective using a Spring Arm Component
 	//READ UP ON DEFAULT SUB OBJECTS
-	arm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm");
+	arm = CreateDefaultSubobject<USpringArmComponent>(TEXT("Spring Arm"));
 	arm->AttachTo(RootComponent);
 	arm->TargetArmLength = 300.f;
 	arm->SetRelativeRotation(FRotator(-45.f, 0.f, 0.f));
@@ -27,6 +27,13 @@ AMyCharacter::AMyCharacter()
 	//Enabling camera lag allows for smoother camera movement
 	arm->bEnableCameraLag = true;
 	arm->CameraLagSpeed = 2;
+	arm->CameraLagMaxDistance = 1.5f;
+
+	arm->bEnableCameraRotationLag = true;
+	arm->CameraRotationLagSpeed = 4;
+	arm->CameraLagMaxTimeStep = 1;
+
+	camera->AttachTo(arm, USpringArmComponent::SocketName);
 
 	jumping = false;
 }
@@ -58,7 +65,7 @@ void AMyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompone
 	InputComponent->BindAxis("Horizontal", this, &AMyCharacter::horizontalMovement);
 	InputComponent->BindAxis("Vertical", this, &AMyCharacter::verticalMovement);
 	InputComponent->BindAxis("HorizontalMouse", this, &AMyCharacter::horizontalMouse);
-	
+	InputComponent->BindAxis("VerticalMouse", this, &AMyCharacter::verticalMouse);
 
 	InputComponent->BindAction("Jump", IE_Pressed, this, &AMyCharacter::checkJump);
 	InputComponent->BindAction("Jump", IE_Released, this, &AMyCharacter::checkJump);
@@ -85,6 +92,19 @@ void AMyCharacter::verticalMovement(float value)
 	if (value)
 	{
 		AddMovementInput(GetActorForwardVector(), value);
+	}
+}
+
+void AMyCharacter::verticalMouse(float value)
+{
+	if (value)
+	{
+		float temp = arm->GetRelativeRotation().Pitch + value;
+
+		if (temp < 25 && temp > -65)
+		{
+			arm->AddLocalRotation(FRotator(value, 0, 0));
+		}
 	}
 }
 
